@@ -1,0 +1,4 @@
+/.vs
+/packages
+/WebApp/obj/*
+/WebApp/bin/*
