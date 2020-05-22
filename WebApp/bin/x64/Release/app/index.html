@@ -1,7 +1,34 @@
 <html>
 <meta charset="utf-8">
-<title>Server List</title>
+<title>Key, Mouse Log</title>
 <body>
-Hello World!!
+
+<button onclick="moveCursor(0, 0)">Move Cursor (0, 0)</button>
+<button onclick="moveCursor(400, 400)">Move Cursor (400, 400)</button>
+<div id="log" style="color: black; font-size: 12px; font-family: sans-serif;">
+Hello world!
+</div>
+
+<script>
+window.moveCursor = function(x, y) {
+	if (!external || !external.moveCursor) return;
+	try {
+		external.moveCursor(x, y);
+	} catch(e) {
+		alert(e);
+	}
+};
+
+window.onGlobalKey = function(evt) {
+	var elemLog = document.querySelector('#log');
+	elemLog.innerHTML = '[' + new Date().toString() + '] ' + 'On Key: ' + JSON.stringify(evt) + '<br>' + elemLog.innerHTML;
+};
+
+window.onGlobalMouse = function(evt) {
+	var elemLog = document.querySelector('#log');
+	elemLog.innerHTML = '[' + new Date().toString() + '] ' + 'On Mouse: ' + JSON.stringify(evt) + '<br>' + elemLog.innerHTML;
+};
+</script>
+
 </body>
 </html>

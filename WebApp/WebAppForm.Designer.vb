@@ -24,15 +24,9 @@ Partial Class WebAppForm
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(WebAppForm))
-        Me.SyncWebTimer = New System.Windows.Forms.Timer(Me.components)
         Me.MainPanel = New System.Windows.Forms.Panel()
         Me.CheckTriggerTimer = New System.Windows.Forms.Timer(Me.components)
         Me.SuspendLayout()
-        '
-        'SyncWebTimer
-        '
-        Me.SyncWebTimer.Enabled = True
-        Me.SyncWebTimer.Interval = 50
         '
         'MainPanel
         '
@@ -47,8 +41,7 @@ Partial Class WebAppForm
         '
         'CheckTriggerTimer
         '
-        Me.CheckTriggerTimer.Enabled = True
-        Me.CheckTriggerTimer.Interval = 10
+        Me.CheckTriggerTimer.Interval = 33
         '
         'WebAppForm
         '
@@ -62,7 +55,6 @@ Partial Class WebAppForm
         Me.ResumeLayout(False)
 
     End Sub
-    Friend WithEvents SyncWebTimer As Timer
     Friend WithEvents MainPanel As Panel
     Friend WithEvents CheckTriggerTimer As Timer
 End Class

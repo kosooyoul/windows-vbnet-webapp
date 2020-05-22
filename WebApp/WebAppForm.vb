@@ -1,6 +1,9 @@
 ﻿Imports Newtonsoft.Json.Linq
 
 Public Class WebAppForm
+    Implements ILoadHandler
+
+    Public CurrentCursor As System.Drawing.Point = New System.Drawing.Point
 
     Private testURL = "http://vr.ahyane.net/ed514c40ab33a2c4dec53c87afea2de6"
     Private appURL = "file:///" & IO.Path.GetFullPath(".\app\index.html")
@@ -10,12 +13,16 @@ Public Class WebAppForm
 
     Public Instance As WebAppForm
 
+    Public Title As String
+
     Public TriggerWebCallback As Boolean = False
     Public TriggerWebCallbackOutput As String
     Public TriggerWebCallbackStr As String
     Public TriggerOpenFile As Boolean = False
     Public TriggerOpenFileCallbackStr As String
     Public MyOpenFileDialog As OpenFileDialog = New OpenFileDialog()
+    Public PrevCursorX As Integer = 0
+    Public PrevCursorY As Integer = 0
 
     Public Sub New()
         Instance = Me
@@ -43,6 +50,10 @@ Public Class WebAppForm
         Browser.RegisterJsObject("external", ExternalJavascript)
         Browser.MenuHandler = New CustomMenuHandler()
         Browser.DragHandler = New CustomDragHandler()
+        Browser.LoadHandler = Me
+
+        PrevCursorX = Cursor.Position.X
+        PrevCursorY = Cursor.Position.Y
 
         MainPanel.Controls.Add(Browser)
     End Sub
@@ -65,23 +76,58 @@ Public Class WebAppForm
 
     Private Sub BrowserReload()
         Browser.Reload()
-        SyncWebTimer.Enabled = True
     End Sub
 
     Private Function BrowserLoaded()
         Return BrowserEval("'0'") = "0"
     End Function
 
-    Private Sub SyncWebTimer_Tick(sender As Object, e As EventArgs) Handles SyncWebTimer.Tick
-        SyncWebTimer.Enabled = False
+    Private Delegate Sub DoUpdateTitleDelegate()
+    Private Delegate Sub DoSyncTitleDelegate()
 
-        If BrowserLoaded() = False Then
-            Me.Text = "Now Loading..."
-            SyncWebTimer.Enabled = True
-            Exit Sub
+    Private Sub DoUpdateTitle()
+        If Me.InvokeRequired Then
+            Me.Invoke(New DoUpdateTitleDelegate(AddressOf DoUpdateTitle))
+        Else
+            Me.Text = Me.Title
         End If
+    End Sub
 
-        Me.Text = BrowserEval("document.title")
+    Private Sub DoSyncTitle()
+        If Me.InvokeRequired Then
+            Me.Invoke(New DoSyncTitleDelegate(AddressOf DoSyncTitle))
+        Else
+            Me.Text = BrowserEval("document.title")
+        End If
+    End Sub
+
+    Private Sub UpdateTitle(text As String)
+        Me.Title = text
+
+        Dim thread As System.Threading.Thread = New System.Threading.Thread(AddressOf DoUpdateTitle)
+        thread.Start()
+    End Sub
+
+    Private Sub SyncTitle()
+        Dim thread As System.Threading.Thread = New System.Threading.Thread(AddressOf DoSyncTitle)
+        thread.Start()
+    End Sub
+
+    Public Sub OnLoadingStateChange(browserControl As IWebBrowser, loadingStateChangedArgs As LoadingStateChangedEventArgs) Implements ILoadHandler.OnLoadingStateChange
+
+    End Sub
+
+    Public Sub OnFrameLoadStart(browserControl As IWebBrowser, frameLoadStartArgs As FrameLoadStartEventArgs) Implements ILoadHandler.OnFrameLoadStart
+        Me.UpdateTitle("Now Loading...")
+    End Sub
+
+    Public Sub OnFrameLoadEnd(browserControl As IWebBrowser, frameLoadEndArgs As FrameLoadEndEventArgs) Implements ILoadHandler.OnFrameLoadEnd
+        CheckTriggerTimer.Enabled = True
+        Me.SyncTitle()
+    End Sub
+
+    Public Sub OnLoadError(browserControl As IWebBrowser, loadErrorArgs As LoadErrorEventArgs) Implements ILoadHandler.OnLoadError
+        Me.UpdateTitle("Error")
     End Sub
 
     Public Class CustomDragHandler
@@ -97,64 +143,117 @@ Public Class WebAppForm
     End Class
 
     Public Class CustomMenuHandler
-            Implements CefSharp.IContextMenuHandler
+        Implements CefSharp.IContextMenuHandler
 
-            Private Sub IContextMenuHandler_OnBeforeContextMenu(browserControl As IWebBrowser, browser As IBrowser, frame As IFrame, parameters As IContextMenuParams, model As IMenuModel) Implements IContextMenuHandler.OnBeforeContextMenu
-                model.Clear()
-            End Sub
-
-            Private Sub IContextMenuHandler_OnContextMenuDismissed(browserControl As IWebBrowser, browser As IBrowser, frame As IFrame) Implements IContextMenuHandler.OnContextMenuDismissed
-
-            End Sub
-
-            Private Function IContextMenuHandler_OnContextMenuCommand(browserControl As IWebBrowser, browser As IBrowser, frame As IFrame, parameters As IContextMenuParams, commandId As CefMenuCommand, eventFlags As CefEventFlags) As Boolean Implements IContextMenuHandler.OnContextMenuCommand
-                Return False
-            End Function
-
-            Private Function IContextMenuHandler_RunContextMenu(browserControl As IWebBrowser, browser As IBrowser, frame As IFrame, parameters As IContextMenuParams, model As IMenuModel, callback As IRunContextMenuCallback) As Boolean Implements IContextMenuHandler.RunContextMenu
-                Return False
-            End Function
-        End Class
-
-        Public Sub WebCallback(output As String, callbackStr As String)
-            TriggerWebCallback = True
-            TriggerWebCallbackOutput = output
-            TriggerWebCallbackStr = callbackStr
+        Private Sub IContextMenuHandler_OnBeforeContextMenu(browserControl As IWebBrowser, browser As IBrowser, frame As IFrame, parameters As IContextMenuParams, model As IMenuModel) Implements IContextMenuHandler.OnBeforeContextMenu
+            model.Clear()
         End Sub
 
-        Public Sub OpenFile(callbackStr As String)
-            TriggerOpenFile = True
-            TriggerOpenFileCallbackStr = callbackStr
+        Private Sub IContextMenuHandler_OnContextMenuDismissed(browserControl As IWebBrowser, browser As IBrowser, frame As IFrame) Implements IContextMenuHandler.OnContextMenuDismissed
+
         End Sub
 
-        Private Sub CheckTriggerTimer_Tick(sender As Object, e As EventArgs) Handles CheckTriggerTimer.Tick
-        If DetectKey.GetState(Keys.ShiftKey) = DetectKey.State.KEEP_DOWN And DetectKey.GetState(Keys.Escape) = DetectKey.State.DOWN Then
-            'Me.Text = "A DOWNED"
-            Me.Activate()
-        End If
-        'If keyState = DetectKey.State.UP Then Me.Text = "A UPED"
-        'If keyState = DetectKey.State.KEEP_DOWN Then Me.Text = "A KEEP DOWNED"
-        'If keyState = DetectKey.State.KEEP_UP Then Me.Text = "A KEEP UPED"
+        Private Function IContextMenuHandler_OnContextMenuCommand(browserControl As IWebBrowser, browser As IBrowser, frame As IFrame, parameters As IContextMenuParams, commandId As CefMenuCommand, eventFlags As CefEventFlags) As Boolean Implements IContextMenuHandler.OnContextMenuCommand
+            Return False
+        End Function
 
-        If TriggerWebCallback = True Then
-                TriggerWebCallback = False
+        Private Function IContextMenuHandler_RunContextMenu(browserControl As IWebBrowser, browser As IBrowser, frame As IFrame, parameters As IContextMenuParams, model As IMenuModel, callback As IRunContextMenuCallback) As Boolean Implements IContextMenuHandler.RunContextMenu
+            Return False
+        End Function
+    End Class
 
+    Public Sub WebCallback(output As String, callbackStr As String)
+        TriggerWebCallback = True
+        TriggerWebCallbackOutput = output
+        TriggerWebCallbackStr = callbackStr
+    End Sub
+
+    Public Sub OpenFile(callbackStr As String)
+        TriggerOpenFile = True
+        TriggerOpenFileCallbackStr = callbackStr
+    End Sub
+
+    Public Sub MoveCursor(x As Integer, y As Integer)
+        'Me.Cursor = New Cursor(Cursor.Current.Handle)
+        Cursor.Position = New Point(x, y)
+    End Sub
+
+    Public Sub ClipCursor(x As Integer, y As Integer, w As Integer, h As Integer)
+        'Me.Cursor = New Cursor(Cursor.Current.Handle)
+        Cursor.Clip = New Rectangle(x, y, w, h) ', Me.Size)
+    End Sub
+
+    Private Sub CheckTriggerTimer_Tick(sender As Object, e As EventArgs) Handles CheckTriggerTimer.Tick
+        'If DetectKey.GetState(Keys.ShiftKey) = DetectKey.STATE_KEEP_DOWN And DetectKey.GetState(Keys.Escape) = DetectKey.STATE_DOWN Then
+        'Me.Activate()
+        'End If
+
+        'Key
+        Dim key As Integer
+        Dim state As String
+        For key = 0 To 255
+            state = DetectKey.GetState(key)
+
+            If state = DetectKey.STATE_DOWN Or state = DetectKey.STATE_UP Then
                 Dim result As JObject = New JObject()
-                result.Add("return", TriggerWebCallbackOutput)
-
-                Browser.ExecuteScriptAsync(TriggerWebCallbackStr & "(" & result.ToString() & ")")
-            End If
-
-            If TriggerOpenFile = True Then
-                TriggerOpenFile = False
-
-                If MyOpenFileDialog.ShowDialog <> DialogResult.Cancel Then
-
-                    Dim result As JObject = New JObject()
-                    result.Add("return", MyOpenFileDialog.FileName.ToString())
-
-                    Browser.ExecuteScriptAsync(TriggerOpenFileCallbackStr & "(" & result.ToString() & ")")
+                If key = 1 Then
+                    result.Add("button", "left")
+                    result.Add("type", state)
+                    result.Add("x", Cursor.Position.X)
+                    result.Add("y", Cursor.Position.Y)
+                    Browser.ExecuteScriptAsync("window.onGlobalMouse(" & result.ToString() & ")")
+                ElseIf key = 2 Then
+                    result.Add("button", "right")
+                    result.Add("type", state)
+                    result.Add("x", Cursor.Position.X)
+                    result.Add("y", Cursor.Position.Y)
+                    Browser.ExecuteScriptAsync("window.onGlobalMouse(" & result.ToString() & ")")
+                ElseIf key = 4 Then
+                    result.Add("button", "middle")
+                    result.Add("type", state)
+                    result.Add("x", Cursor.Position.X)
+                    result.Add("y", Cursor.Position.Y)
+                    Browser.ExecuteScriptAsync("window.onGlobalMouse(" & result.ToString() & ")")
+                Else
+                    result.Add("key", key)
+                    result.Add("state", state)
+                    Browser.ExecuteScriptAsync("window.onGlobalKey(" & result.ToString() & ")")
                 End If
             End If
-        End Sub
-    End Class
+        Next
+
+        'Mouse
+        If Cursor.Position.X <> PrevCursorX Or Cursor.Position.Y <> PrevCursorY Then
+            Dim result As JObject = New JObject()
+            result.Add("type", "move")
+            result.Add("x", Cursor.Position.X)
+            result.Add("y", Cursor.Position.Y)
+            Browser.ExecuteScriptAsync("window.onGlobalMouse(" & result.ToString() & ")")
+
+            PrevCursorX = Cursor.Position.X
+            PrevCursorY = Cursor.Position.Y
+        End If
+
+        If TriggerWebCallback = True Then
+            TriggerWebCallback = False
+
+            Dim result As JObject = New JObject()
+            result.Add("return", TriggerWebCallbackOutput)
+
+            Browser.ExecuteScriptAsync(TriggerWebCallbackStr & "(" & result.ToString() & ")")
+        End If
+
+        If TriggerOpenFile = True Then
+            TriggerOpenFile = False
+
+            If MyOpenFileDialog.ShowDialog <> DialogResult.Cancel Then
+
+                Dim result As JObject = New JObject()
+                result.Add("return", MyOpenFileDialog.FileName.ToString())
+
+                Browser.ExecuteScriptAsync(TriggerOpenFileCallbackStr & "(" & result.ToString() & ")")
+            End If
+        End If
+    End Sub
+
+End Class

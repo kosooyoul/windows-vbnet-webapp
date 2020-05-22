@@ -5,13 +5,13 @@ Public Module JavascriptInterface
     <System.Runtime.InteropServices.ComVisibleAttribute(True)>
     Public Class External
 
-        Public form As WebAppForm
+        Public MyWebAppForm As WebAppForm
 
         Public Sub New(form As WebAppForm)
-            Me.form = form
+            Me.MyWebAppForm = form
         End Sub
 
-        Public Sub exec(command As String, Optional show As Boolean = True, Optional wait As Boolean = False)
+        Public Sub Exec(command As String, Optional show As Boolean = True, Optional wait As Boolean = False)
             If show Then
                 Shell(command, AppWinStyle.NormalFocus, wait, -1)
             Else
@@ -19,12 +19,11 @@ Public Module JavascriptInterface
             End If
         End Sub
 
-        Public Sub openFile(callbackStr As String)
-            form.OpenFile(callbackStr)
+        Public Sub OpenFile(callbackStr As String)
+            Me.MyWebAppForm.OpenFile(callbackStr)
         End Sub
 
-
-        Public Sub command(command As String, callbackStr As String)
+        Public Sub Command(command As String, callbackStr As String)
             Dim p As Process = New Process
             Dim output As String
 
@@ -39,15 +38,13 @@ Public Module JavascriptInterface
                 .WaitForExit()
             End With
 
-            'MsgBox(output)
-            'output = Trim(Mid(output, Len("shhell")))
-            'output = Mid(output, 1, Math.Max(InStr(output, " ") - 1, 0))
+            Me.MyWebAppForm.WebCallback(output, callbackStr)
+        End Sub
 
-            form.WebCallback(output, callbackStr)
-            ' MessageBox.Show(Len(output) & " : " & output)
-
-            ' Shell("adb shell kill -9 " + output, AppWinStyle.Hide, False, -1)
+        Public Sub MoveCursor(x As Integer, y As Integer)
+            Me.MyWebAppForm.MoveCursor(x, y)
         End Sub
 
     End Class
+
 End Module

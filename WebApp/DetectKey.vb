@@ -1,16 +1,14 @@
 ﻿Imports System.Runtime.InteropServices
 
 Module DetectKey
-    Public Enum State
-        UP
-        KEEP_UP
-        DOWN
-        KEEP_DOWN
-    End Enum
+    Public STATE_UP = "up"
+    Public STATE_KEEP_UP = "keep_up"
+    Public STATE_DOWN = "down"
+    Public STATE_KEEP_DOWN = "keep_down"
 
     Private Declare Ansi Function GetAsyncKeyState Lib "user32" (ByVal vKey As Int32) As Int32
 
-    Private States As New Dictionary(Of Integer, Boolean)()
+    Private States As New Dictionary(Of String, Boolean)()
 
     Public ReadOnly Property ControlKey() As Boolean
         Get
@@ -38,7 +36,7 @@ Module DetectKey
     Private Function GetKeyState(ByVal nVirtKey As Keys) As Short
     End Function
 
-    Public Function GetState(ByVal key As Keys) As State
+    Public Function GetState(ByVal key As Keys) As String
         Dim rtn As Short = GetKeyState(key)
         Dim downed As Boolean
 
@@ -47,15 +45,15 @@ Module DetectKey
         If States.Keys.Contains(CInt(key)) Then
             If downed = False Then
                 States.Remove(CInt(key))
-                Return State.UP
+                Return STATE_UP
             End If
-            Return State.KEEP_DOWN
+            Return STATE_KEEP_DOWN
         Else
             If downed = True Then
                 States.Add(CInt(key), True)
-                Return State.DOWN
+                Return STATE_DOWN
             End If
-            Return State.KEEP_UP
+            Return STATE_KEEP_UP
         End If
 
     End Function
