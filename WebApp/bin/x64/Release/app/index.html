@@ -5,6 +5,9 @@
 
 <button onclick="moveCursor(0, 0)">Move Cursor (0, 0)</button>
 <button onclick="moveCursor(400, 400)">Move Cursor (400, 400)</button>
+<button onclick="mouseClick('left', 'down')">Mouse Click (left, down)</button>
+<button onclick="mouseClick('left', 'up')">Mouse Click (left, up)</button>
+<button onclick="mouseClick('left', 'click')">Mouse Click (left, click)</button>
 <div id="log" style="color: black; font-size: 12px; font-family: sans-serif;">
 Hello world!
 </div>
@@ -14,6 +17,15 @@ window.moveCursor = function(x, y) {
 	if (!external || !external.moveCursor) return;
 	try {
 		external.moveCursor(x, y);
+	} catch(e) {
+		alert(e);
+	}
+};
+
+window.mouseClick = function(key, state) {
+	if (!external || !external.mouseClick) return;
+	try {
+		external.mouseClick(key, state);
 	} catch(e) {
 		alert(e);
 	}

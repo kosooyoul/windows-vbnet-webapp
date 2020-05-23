@@ -3,6 +3,7 @@
 Public Class WebAppForm
     Implements ILoadHandler
 
+    Private Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Integer, ByVal dx As Integer, ByVal dy As Integer, ByVal cButtons As Integer, ByVal dwExtraInfo As Integer)
     Public CurrentCursor As System.Drawing.Point = New System.Drawing.Point
 
     Private testURL = "http://vr.ahyane.net/ed514c40ab33a2c4dec53c87afea2de6"
@@ -176,6 +177,23 @@ Public Class WebAppForm
     Public Sub MoveCursor(x As Integer, y As Integer)
         'Me.Cursor = New Cursor(Cursor.Current.Handle)
         Cursor.Position = New Point(x, y)
+    End Sub
+
+    Public Sub MouseClick(key As String, state As String)
+        If key = "left" Then
+            If state = "down" Then
+                mouse_event(&H2, 0, 0, 0, 1)
+            ElseIf state = "up" Then
+                mouse_event(&H4, 0, 0, 0, 1)
+            ElseIf state = "click" Then
+                mouse_event(&H2, 0, 0, 0, 1)
+                mouse_event(&H4, 0, 0, 0, 1)
+            End If
+        ElseIf key = "middle" Then
+
+        ElseIf key = "right" Then
+
+        End If
     End Sub
 
     Public Sub ClipCursor(x As Integer, y As Integer, w As Integer, h As Integer)

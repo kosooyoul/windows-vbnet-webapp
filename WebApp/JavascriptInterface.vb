@@ -45,6 +45,10 @@ Public Module JavascriptInterface
             Me.MyWebAppForm.MoveCursor(x, y)
         End Sub
 
+        Public Sub MouseClick(key As String, state As String)
+            Me.MyWebAppForm.MouseClick(key, state)
+        End Sub
+
     End Class
 
 End Module
