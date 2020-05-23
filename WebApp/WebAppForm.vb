@@ -4,6 +4,19 @@ Public Class WebAppForm
     Implements ILoadHandler
 
     Private Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Integer, ByVal dx As Integer, ByVal dy As Integer, ByVal cButtons As Integer, ByVal dwExtraInfo As Integer)
+    Public Const MOUSEEVENTF_ABSOLUTE As UInt32 = &HE8000
+    Public Const MOUSEEVENTF_LEFTDOWN As UInt32 = &HE0002
+    Public Const MOUSEEVENTF_LEFTUP As UInt32 = &HE0004
+    Public Const MOUSEEVENTF_HWHEEL As UInt32 = &HE1000
+    Public Const MOUSEEVENTF_MIDDLEDOWN As UInt32 = &HE0020
+    Public Const MOUSEEVENTF_MIDDLEUP As UInt32 = &HE0040
+    Public Const MOUSEEVENTF_MOVE As UInt32 = &HE0001
+    Public Const MOUSEEVENTF_RIGHTDOWN As UInt32 = &HE0008
+    Public Const MOUSEEVENTF_RIGHTUP As UInt32 = &HE0010
+    Public Const MOUSEEVENTF_WHEEL As UInt32 = &HE0800
+    Public Const MOUSEEVENTF_XDOWN As UInt32 = &HE0080
+    Public Const MOUSEEVENTF_XUP As UInt32 = &HE0100
+
     Public CurrentCursor As System.Drawing.Point = New System.Drawing.Point
 
     Private testURL = "http://vr.ahyane.net/ed514c40ab33a2c4dec53c87afea2de6"
@@ -182,17 +195,31 @@ Public Class WebAppForm
     Public Sub MouseClick(key As String, state As String)
         If key = "left" Then
             If state = "down" Then
-                mouse_event(&H2, 0, 0, 0, 1)
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 1)
             ElseIf state = "up" Then
-                mouse_event(&H4, 0, 0, 0, 1)
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 1)
             ElseIf state = "click" Then
-                mouse_event(&H2, 0, 0, 0, 1)
-                mouse_event(&H4, 0, 0, 0, 1)
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 1)
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 1)
             End If
         ElseIf key = "middle" Then
-
+            If state = "down" Then
+                mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 1)
+            ElseIf state = "up" Then
+                mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, 1)
+            ElseIf state = "click" Then
+                mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 1)
+                mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, 1)
+            End If
         ElseIf key = "right" Then
-
+            If state = "down" Then
+                mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 1)
+            ElseIf state = "up" Then
+                mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 1)
+            ElseIf state = "click" Then
+                mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 1)
+                mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 1)
+            End If
         End If
     End Sub
 
